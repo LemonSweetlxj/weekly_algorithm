@@ -117,19 +117,10 @@ class FASTTEXT(object):
         fn_op = tf.reduce_sum(tf.cast(tf.logical_and(tf.equal(real, ones_like_actuals),tf.equal(predict, zeros_like_predictions)),"float" ))
 
         tp, tn, fp, fn = sess.run([tp_op, tn_op, fp_op, fn_op], feed_dict)
-        if int((float(tp) + float(fn))) != 0:
-            recall = float(tp)/(float(tp) + float(fn))
-        else:
-            recall = 0
-        accuracy = (float(tp) + float(tn))/(float(tp) + float(fp) + float(fn) + float(tn))
-        if int((float(tp) + float(fp))) != 0:
-            precision = float(tp)/(float(tp) + float(fp))
-        else:
-            precision = 0
-        if int(precision + recall) != 0:
-            f1_score = (2 * (precision * recall)) / (precision + recall + 0.0001)
-        else:
-            f1_score = 0
+        recall = float(tp)/(float(tp) + float(fn) + 0.0001)
+        accuracy = (float(tp) + float(tn))/(float(tp) + float(fp) + float(fn) + float(tn) + 0.0001)
+        precision = float(tp)/(float(tp) + float(fp) + 0.0001)
+        f1_score = (2 * (precision * recall)) / (precision + recall + 0.0001)
         return accuracy,recall,precision,f1_score
    
    # 测一轮
@@ -200,11 +191,8 @@ class FASTTEXT(object):
         batches = batch_yield(dev,self.batch_size,self.vocab,self.tag2label,shuffle=self.shuffle)
         for step,(queries, docs, labels) in enumerate(batches):
             index_queries,queries_len_list = pad_sequences(queries,pad_mark=0)
-            index_docs,docs_len_list = pad_sequences(docs,pad_mark=0)
             sentences["index_queries"] = index_queries
             sentences["index_docs"] = index_docs
-            sentences["queries_length"] = queries_len_list
-            sentences["docs_length"] = docs_len_list
             feed_dict_map = {}
 
             for input_item in model_graph_signature.inputs.items():
